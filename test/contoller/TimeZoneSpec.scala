@@ -91,6 +91,4 @@ class TimeZoneSpec extends Specification {
       contentAsString(result) must contain(new DateTime().getYear.toString)
     }
   }
-
-
 }

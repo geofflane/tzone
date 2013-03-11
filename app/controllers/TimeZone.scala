@@ -1,10 +1,12 @@
 package controllers
 
 import play.api.mvc._
+import play.api.libs.json.Json
 import org.joda.time.DateTime
 import data.{DbAccountRepository, AccountRepository}
 import scala.Some
 import util.TimeConverter._
+import play.api.Logger
 
 /**
  * 
@@ -18,38 +20,51 @@ object TimeZone extends Controller with TimeZoneController {
 trait TimeZoneController {
   this: Controller =>
 
+  val Text = Accepting("text/plain")
   val accountRepository: AccountRepository
 
   def convertBetween(from: String, to:String, timeString:String) = Action { implicit request =>
-    withAuthorization {
+    withAuthorization( {
       (timeZoneFor(from),  timeZoneFor(to)) match {
         case (Some(f), Some(t)) => {
           parseTime(f, timeString) match {
-            case (Some(time)) => Ok(format(time.toDateTime(t)))
+            case (Some(time)) => {
+              render {
+                case Accepts.Json => Ok(Json.obj("result" -> format(new DateTime(t))))
+                case _ => Ok(format(new DateTime(t)))
+              }
+            }
             case None => BadRequest("Must send a valid time")
           }
         }
         case (_, _) => BadRequest("Unknown from (%s) or to (%s) timezones".format(from, to))
       }
-    }
+    } )
   }
 
   def currentTime(to:String) = Action { implicit request =>
-    withAuthorization {
+    Logger("TZ").debug(request.acceptedTypes.toString())
+
+    withAuthorization( {
       timeZoneFor(to) match {
-        case Some(t) => Ok(format(new DateTime().toDateTime(t)))
+        case Some(t) => {
+          render {
+            case Accepts.Json => Ok(Json.obj("result" -> format(new DateTime(t))))
+            case _ => Ok(format(new DateTime(t)))
+          }
+        }
         case None => BadRequest("Unknown to timezone (%s)".format(to))
       }
-    }
+    } )
   }
 
-  private def withAuthorization[A](fn: => Result)(implicit request: Request[A]): Result = {
+  private def withAuthorization[A](body: => Result)(implicit request: Request[A]): Result = {
     request.getQueryString("token") match {
       case Some(token) => {
         if (! accountRepository.verify(token)) {
           Unauthorized("Unknown token")
         } else {
-          fn
+          body
         }
       }
       case None => Unauthorized("Unknown token")

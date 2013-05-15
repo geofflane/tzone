@@ -51,19 +51,13 @@ object DbAccountRepository extends AccountRepository {
   }
 
   def verify(key:String) = {
-    findByKey(key) match {
-      case Some(a) => a.isActive
-      case _ => false
-    }
+    findByKey(key) map { _.isActive } getOrElse(false)
   }
 
   def findByKey(key: String): Option[Account] = {
     DB.withConnection { implicit conn =>
       val selectAccounts = SQL("SELECT a.accountName as name, a.accountKey as key, a.isActive FROM Account a WHERE a.accountKey={key};")
-      selectAccounts.on("key" -> key).as(account *) match {
-        case Nil => None
-        case x :: _ => Some(x)
-      }
+      selectAccounts.on("key" -> key).as(account singleOpt)
     }
   }
 }

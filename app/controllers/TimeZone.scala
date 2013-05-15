@@ -6,7 +6,6 @@ import org.joda.time.DateTime
 import data.{DbAccountRepository, AccountRepository}
 import scala.Some
 import util.TimeConverter._
-import play.api.Logger
 
 /**
  * 
@@ -28,12 +27,7 @@ trait TimeZoneController {
       (timeZoneFor(from),  timeZoneFor(to)) match {
         case (Some(f), Some(t)) => {
           parseTime(f, timeString) match {
-            case (Some(time)) => {
-              render {
-                case Accepts.Json => Ok(Json.obj("result" -> format(new DateTime(t))))
-                case _ => Ok(format(new DateTime(t)))
-              }
-            }
+            case (Some(time)) => renderTime(new DateTime(time).toDateTime(t))
             case None => BadRequest("Must send a valid time")
           }
         }
@@ -43,19 +37,19 @@ trait TimeZoneController {
   }
 
   def currentTime(to:String) = Action { implicit request =>
-    Logger("TZ").debug(request.acceptedTypes.toString())
-
     withAuthorization( {
       timeZoneFor(to) match {
-        case Some(t) => {
-          render {
-            case Accepts.Json => Ok(Json.obj("result" -> format(new DateTime(t))))
-            case _ => Ok(format(new DateTime(t)))
-          }
-        }
+        case Some(t) => renderTime(new DateTime(t))
         case None => BadRequest("Unknown to timezone (%s)".format(to))
       }
     } )
+  }
+
+  private def renderTime[A](time: DateTime)(implicit request: Request[A]): Result = {
+    render {
+      case Accepts.Json => Ok(Json.obj("result" -> format(time)))
+      case _ => Ok(format(time))
+    }
   }
 
   private def withAuthorization[A](body: => Result)(implicit request: Request[A]): Result = {

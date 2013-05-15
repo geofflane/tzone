@@ -2,6 +2,7 @@ package util
 
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.ISODateTimeFormat
+import play.api.Logger
 
 /**
  *
@@ -30,7 +31,10 @@ object TimeConverter {
       try {
         Option(formatter.withZone(from).parseDateTime(timeString))
       } catch {
-        case e: IllegalArgumentException => None
+        case e: IllegalArgumentException => {
+          Logger.warn("Invalid date time string %s".format(timeString))
+          None
+        }
       }
     }
   }

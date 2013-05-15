@@ -2,7 +2,7 @@ package controllers
 
 import play.api.mvc._
 import play.api.libs.json.Json
-import org.joda.time.DateTime
+import org.joda.time.{DateTimeZone, DateTime}
 import data.{DbAccountRepository, AccountRepository}
 import scala.Some
 import util.TimeConverter._
@@ -25,12 +25,9 @@ trait TimeZoneController {
   def convertBetween(from: String, to:String, timeString:String) = Action { implicit request =>
     withAuthorization( {
       (timeZoneFor(from),  timeZoneFor(to)) match {
-        case (Some(f), Some(t)) => {
-          parseTime(f, timeString) match {
-            case (Some(time)) => renderTime(new DateTime(time).toDateTime(t))
-            case None => BadRequest("Must send a valid time")
-          }
-        }
+        case (Some(f), Some(t)) =>  parseTime(f, timeString)
+          .map { time: DateTime => renderTime(new DateTime(time).toDateTime(t)) }
+          .getOrElse(BadRequest("Must send a valid time"))
         case (_, _) => BadRequest("Unknown from (%s) or to (%s) timezones".format(from, to))
       }
     } )
@@ -38,10 +35,9 @@ trait TimeZoneController {
 
   def currentTime(to:String) = Action { implicit request =>
     withAuthorization( {
-      timeZoneFor(to) match {
-        case Some(t) => renderTime(new DateTime(t))
-        case None => BadRequest("Unknown to timezone (%s)".format(to))
-      }
+      timeZoneFor(to)
+        .map { zone: DateTimeZone => renderTime(new DateTime(zone)) }
+        .getOrElse(BadRequest("Unknown to timezone (%s)".format(to)))
     } )
   }
 
@@ -54,6 +50,7 @@ trait TimeZoneController {
 
   private def withAuthorization[A](body: => Result)(implicit request: Request[A]): Result = {
     request.getQueryString("token") match {
+      case None => Unauthorized("Unknown token")
       case Some(token) => {
         if (! accountRepository.verify(token)) {
           Unauthorized("Unknown token")
@@ -61,7 +58,6 @@ trait TimeZoneController {
           body
         }
       }
-      case None => Unauthorized("Unknown token")
     }
   }
 }

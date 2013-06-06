@@ -88,6 +88,7 @@ class TimeZoneSpec extends Specification {
     "convertTime converts between two timezones" in {
       val result = TestTimeZoneGoodToken.convertBetween("America/New_York", "America/Los_Angeles", "2013-02-02T12:07:00.000")(FakeRequest(GET, "/foo?token=xxx"))
       status(result) must equalTo(OK)
+      println("xxx: " + contentType(result))
       contentType(result) must beSome.which(_ == "text/plain")
       contentAsString(result) must contain("2013-02-02T09:07")
     }

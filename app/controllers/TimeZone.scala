@@ -6,6 +6,7 @@ import org.joda.time.{DateTimeZone, DateTime}
 import data.{DbAccountRepository, AccountRepository}
 import scala.Some
 import util.TimeConverter._
+import play.api.http.MimeTypes
 
 /**
  * 
@@ -19,7 +20,7 @@ object TimeZone extends Controller with TimeZoneController {
 trait TimeZoneController {
   this: Controller =>
 
-  val Text = Accepting("text/plain")
+  val Text = Accepting(MimeTypes.TEXT)
   val accountRepository: AccountRepository
 
   def convertBetween(from: String, to:String, timeString:String) = Action { implicit request =>
@@ -43,7 +44,8 @@ trait TimeZoneController {
 
   private def renderTime[A](time: DateTime)(implicit request: Request[A]): Result = {
     render {
-      case Accepts.Json => Ok(Json.obj("result" -> format(time)))
+      case Text() => Ok(format(time))
+      case Accepts.Json() => Ok(Json.obj("result" -> format(time)))
       case _ => Ok(format(time))
     }
   }

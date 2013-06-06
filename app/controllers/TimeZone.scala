@@ -50,7 +50,7 @@ trait TimeZoneController {
 
   private def withAuthorization[A](body: => Result)(implicit request: Request[A]): Result = {
     request.getQueryString("token") match {
-      case None => Unauthorized("Unknown token")
+      case None => Unauthorized("No token passed")
       case Some(token) => {
         if (! accountRepository.verify(token)) {
           Unauthorized("Unknown token")

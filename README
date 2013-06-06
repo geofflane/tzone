@@ -2,3 +2,5 @@ This is your new Play 2.1 application
 =====================================
 
 This file will be packaged with your application, when using `play dist`.
+
+curl http://localhost:9000/convertCurrent?to=America/Los_Angeles&token=xxx

@@ -11,22 +11,27 @@ case class Account (name: String, key: String, isActive: Boolean)
 trait AccountRepository {
   def verify(key:String): Boolean
   def findByKey(key: String): Option[Account]
+  def save(name:String, key:String): Account
+  def delete(key: String): Int
+  def activate(key: String): Int
+  def deactivate(key: String): Int
 }
 
 object DbAccountRepository extends AccountRepository {
 
-  val account = {
+  val accountRowMapper = {
     str("name") ~
     str("key") ~
     bool("isActive") map {
-        case n~k~isActive => Account(n,k,isActive)
+        case n~k~isActive => Account(n, k, isActive)
       }
   }
 
   def save(name:String, key:String) = {
     DB.withConnection { implicit conn =>
       SQL("INSERT INTO Account (accountName, accountKey, isActive) VALUES({name}, {key}, {isActive});")
-        .on("name" -> name, "key" -> key, "isActive" -> true).executeInsert()
+        .on("name" -> name, "key" -> key, "isActive" -> true)
+        .executeInsert()
     }
     Account(name, key, isActive = true)
   }
@@ -34,19 +39,21 @@ object DbAccountRepository extends AccountRepository {
   def delete(key:String) = {
     DB.withConnection { implicit conn =>
       SQL("DELETE FROM Account WHERE key={key};")
-        .on("key" -> key).executeUpdate()
+        .on("key" -> key)
+        .executeUpdate()
     }
   }
 
-  def activate = modifyActive(isActive = true) _
+  def activate(key:String) = modifyActive(isActive = true)(key)
 
-  def deactivate = modifyActive(isActive = false) _
+  def deactivate(key:String) = modifyActive(isActive = false)(key)
 
   private def modifyActive(isActive: Boolean)(key: String) = {
     DB.withConnection { implicit conn =>
       Logger.debug("Modify active")
       SQL("UPDATE Account SET isActive={isActive} WHERE accountKey={key};")
-        .on("isActive" -> isActive, "key" -> key).executeUpdate()
+        .on("isActive" -> isActive, "key" -> key)
+        .executeUpdate()
     }
   }
 
@@ -57,7 +64,7 @@ object DbAccountRepository extends AccountRepository {
   def findByKey(key: String): Option[Account] = {
     DB.withConnection { implicit conn =>
       val selectAccounts = SQL("SELECT a.accountName as name, a.accountKey as key, a.isActive FROM Account a WHERE a.accountKey={key};")
-      selectAccounts.on("key" -> key).as(account singleOpt)
+      selectAccounts.on("key" -> key).as(accountRowMapper singleOpt)
     }
   }
 }

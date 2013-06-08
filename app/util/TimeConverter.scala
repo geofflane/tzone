@@ -3,6 +3,7 @@ package util
 import org.joda.time.{DateTime, DateTimeZone}
 import org.joda.time.format.ISODateTimeFormat
 import play.api.Logger
+import scala.collection.JavaConverters._
 
 /**
  *
@@ -10,9 +11,11 @@ import play.api.Logger
  * @since 2/6/2013
  */
 object TimeConverter {
-  val formatter = ISODateTimeFormat.dateHourMinuteSecondMillis()
+  val formatter = ISODateTimeFormat.dateTime() //.dateHourMinuteSecondMillis()
 
   def format(time: DateTime) = formatter.print(time)
+
+  def timeZones: List[String] = DateTimeZone.getAvailableIDs.asScala.toList.sorted
 
   def timeZoneFor(id: String): Option[DateTimeZone] = id match {
     case null => None

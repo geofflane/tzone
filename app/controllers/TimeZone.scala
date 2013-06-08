@@ -7,6 +7,7 @@ import data.{DbAccountRepository, AccountRepository}
 import scala.Some
 import util.TimeConverter._
 import play.api.http.MimeTypes
+import util.TimeConverter
 
 /**
  * 
@@ -22,6 +23,10 @@ trait TimeZoneController {
 
   val Text = Accepting(MimeTypes.TEXT)
   val accountRepository: AccountRepository
+
+  def availableTimeZones = Action { implicit request =>
+    Ok(Json.obj("timeZones" -> TimeConverter.timeZones))
+  }
 
   def convertBetween(from: String, to:String, timeString:String) = Action { implicit request =>
     withAuthorization( {

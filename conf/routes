@@ -9,6 +9,7 @@ GET     /convertTime                controllers.TimeZone.convertBetween(from:Str
 GET     /convertCurrent             controllers.TimeZone.currentTime(to:String)
 
 GET     /current/*to                controllers.TimeZone.currentTime(to)
+GET     /timeZones                  controllers.TimeZone.availableTimeZones
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

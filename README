@@ -1,7 +1,7 @@
-This is your new Play 2.1 application
-=====================================
+Running with SBT requires perm gen:
+export SBT_OPTS=-XX:MaxPermSize=256M
 
-This file will be packaged with your application, when using `play dist`.
 
+curl http://localhost:9000/timeZones
 curl http://localhost:9000/convertCurrent?to=America/Los_Angeles&token=xxx
 curl -H "Accept: application/json" http://localhost:9000/current/America/Los_Angeles\?token=xxx
